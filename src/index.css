@@ -5,18 +5,31 @@
   --border-light: #a89fd6;
   --border-dark: #05030a;
 
-  --water-deep: #14335c;
-  --water-light: #1f4d85;
-  --mountain: #4b3f6b;
-  --mountain-light: #6a5a92;
-  --park: #1f6b3a;
-  --park-light: #2f8a4c;
-  --downtown: #6b5b8a;
-  --downtown-alt: #7c6a9c;
-  --downtown-dark: #5a4a78;
-  --island: #c98a4b;
-  --land: #3f6b45;
-  --bridge: #b08968;
+  --water-deep: #121a4a;
+  --water-mid: #223a8f;
+  --water-light: #3f66d6;
+  --mountain: #3d2a5c;
+  --mountain-mid: #6b4587;
+  --mountain-snow: #f3e9ff;
+  --park: #1f7a3e;
+  --park-light: #3fbf63;
+  --park-dark: #0f4a22;
+  --sand: #e8c98a;
+  --downtown: #7a56ad;
+  --downtown-alt: #9873c9;
+  --downtown-dark: #4f3a75;
+
+  --map-downtown-dark: #6b3226;
+  --map-downtown: #c9603f;
+  --map-downtown-alt: #e0895a;
+  --map-pier: #9c8a72;
+
+  --window-lit: #ffd76a;
+  --island: #e0913f;
+  --island-roof: #d9455a;
+  --land: #2f6b48;
+  --land-alt: #4a8a5c;
+  --bridge: #c99a6a;
 
   --amber: #ffb000;
   --cyan: #38f0e0;

@@ -48,7 +48,6 @@ export default function Landmark({ landmark, onOpen }) {
     >
       <span className="landmark-label">
         {landmark.name}
-        <br />
         <span className="sub">▸ {landmark.subtitle}</span>
       </span>
       <span className="landmark-marker">

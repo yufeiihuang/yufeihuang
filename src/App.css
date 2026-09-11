@@ -189,25 +189,32 @@
 
 .landmark-label {
   margin-top: 4px;
-  font-size: 13px;
-  padding: 2px 6px;
-  background: var(--panel);
-  border: 2px solid var(--border-dark);
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  line-height: 1.5;
+  padding: 3px 6px;
+  background: rgba(11, 15, 26, 0.82);
+  border: 1px solid var(--border-light);
   white-space: nowrap;
-  opacity: 0;
-  transform: translateY(-4px);
-  transition: opacity 0.15s, transform 0.15s;
   pointer-events: none;
+  color: var(--text);
+  text-shadow: 1px 1px 0 #000;
 }
 
 .landmark-label .sub {
+  display: block;
   color: var(--amber);
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.15s, max-height 0.15s;
 }
 
-.landmark:hover .landmark-label,
-.landmark:focus-visible .landmark-label {
+.landmark:hover .landmark-label .sub,
+.landmark:focus-visible .landmark-label .sub {
   opacity: 1;
-  transform: translateY(0);
+  max-height: 14px;
+  margin-top: 3px;
 }
 
 .landmark:hover .landmark-marker,
