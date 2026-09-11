@@ -1,38 +1,37 @@
-const ICONS = {
+const GLYPHS = {
   tree: (
-    <svg viewBox="0 0 16 16" width="20" height="20">
-      <rect x="7" y="10" width="2" height="5" fill="#7a5a3a" />
-      <rect x="4" y="6" width="8" height="5" fill="#2f8a4c" />
-      <rect x="5" y="2" width="6" height="5" fill="#3aa85c" />
-    </svg>
+    <g stroke="#0b0f1a" strokeWidth="1.6" fill="none" strokeLinecap="round">
+      <circle cx="10" cy="8" r="5" />
+      <line x1="10" y1="12" x2="10" y2="16" />
+    </g>
   ),
   building: (
-    <svg viewBox="0 0 16 16" width="20" height="20">
-      <rect x="2" y="6" width="4" height="9" fill="#7c6a9c" />
-      <rect x="7" y="2" width="4" height="13" fill="#8f7bb0" />
-      <rect x="12" y="8" width="3" height="7" fill="#6b5b8a" />
-      <rect x="8" y="4" width="1" height="1" fill="#ffe08a" />
-      <rect x="9.5" y="4" width="1" height="1" fill="#ffe08a" />
-      <rect x="8" y="6" width="1" height="1" fill="#ffe08a" />
-    </svg>
+    <g stroke="#0b0f1a" strokeWidth="1.6" fill="none" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="6" y="5" width="8" height="12" />
+      <line x1="8.5" y1="8" x2="8.5" y2="8" />
+      <line x1="8.5" y1="11" x2="8.5" y2="11" />
+      <line x1="11.5" y1="8" x2="11.5" y2="8" />
+    </g>
   ),
   dome: (
-    <svg viewBox="0 0 16 16" width="20" height="20">
-      <rect x="1" y="12" width="14" height="2" fill="#8a6a3a" />
-      <rect x="3" y="9" width="10" height="3" fill="#e0d0a0" />
-      <rect x="4" y="6" width="8" height="3" fill="#f0e0b0" />
-      <rect x="6" y="4" width="4" height="2" fill="#fff2c8" />
-    </svg>
+    <g stroke="#0b0f1a" strokeWidth="1.6" fill="none" strokeLinecap="round">
+      <path d="M 4 13 A 6 6 0 0 1 16 13" />
+      <line x1="3" y1="13" x2="17" y2="13" />
+    </g>
   ),
   market: (
-    <svg viewBox="0 0 16 16" width="20" height="20">
-      <rect x="2" y="7" width="12" height="7" fill="#c98a4b" />
-      <rect x="1" y="4" width="14" height="3" fill="#d94f4f" />
-      <rect x="1" y="4" width="3" height="3" fill="#e8e0c8" />
-      <rect x="7" y="4" width="3" height="3" fill="#e8e0c8" />
-      <rect x="13" y="4" width="2" height="3" fill="#e8e0c8" />
-    </svg>
+    <g stroke="#0b0f1a" strokeWidth="1.6" fill="none" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M 5 14 L 10 5 L 15 14 Z" />
+      <line x1="4" y1="14" x2="16" y2="14" />
+    </g>
   ),
+}
+
+const PIN_COLOR = {
+  tree: 'var(--v-park)',
+  building: 'var(--v-downtown)',
+  dome: 'var(--v-science)',
+  market: 'var(--v-island)',
 }
 
 export default function Landmark({ landmark, onOpen }) {
@@ -52,7 +51,10 @@ export default function Landmark({ landmark, onOpen }) {
       </span>
       <span className="landmark-marker">
         <span className="landmark-ping" />
-        {ICONS[landmark.icon]}
+        <svg viewBox="0 0 20 20" width="26" height="26">
+          <circle cx="10" cy="10" r="9" fill={PIN_COLOR[landmark.icon]} stroke="#fff" strokeWidth="1.6" />
+          {GLYPHS[landmark.icon]}
+        </svg>
       </span>
     </button>
   )

@@ -12,9 +12,29 @@ function useClock() {
   return now
 }
 
+function useDismissible(key) {
+  const [dismissed, setDismissed] = useState(() => {
+    try {
+      return localStorage.getItem(key) === '1'
+    } catch {
+      return false
+    }
+  })
+  const dismiss = () => {
+    setDismissed(true)
+    try {
+      localStorage.setItem(key, '1')
+    } catch {
+      /* ignore */
+    }
+  }
+  return [dismissed, dismiss]
+}
+
 export default function Taskbar({ openWindows, focusedId, onFocusWindow, onOpenLandmark }) {
   const now = useClock()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [tipDismissed, dismissTip] = useDismissible('recruiterTipDismissed')
 
   const time = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
 
@@ -60,11 +80,19 @@ export default function Taskbar({ openWindows, focusedId, onFocusWindow, onOpenL
         ))}
       </div>
 
-      <div className="taskbar-dock">
-        <a className="dock-icon" href={`mailto:${profile.email}`} title="Email">✉</a>
-        <a className="dock-icon" href={profile.linkedin} target="_blank" rel="noreferrer" title="LinkedIn">in</a>
-        <a className="dock-icon" href={profile.github} target="_blank" rel="noreferrer" title="GitHub">⌂</a>
-        <a className="dock-icon" href={withBase('resume.pdf')} target="_blank" rel="noreferrer" title="Résumé">▤</a>
+      <div style={{ position: 'relative' }}>
+        {!tipDismissed && (
+          <div className="recruiter-tip">
+            <button className="recruiter-tip-close" onClick={dismissTip} aria-label="Dismiss">×</button>
+            Recruiter? Résumé, GitHub &amp; contact are all right here ↓
+          </div>
+        )}
+        <div className="taskbar-dock">
+          <a className="dock-icon" href={`mailto:${profile.email}`} title="Email">✉</a>
+          <a className="dock-icon" href={profile.linkedin} target="_blank" rel="noreferrer" title="LinkedIn">in</a>
+          <a className="dock-icon" href={profile.github} target="_blank" rel="noreferrer" title="GitHub">⌂</a>
+          <a className="dock-icon" href={withBase('resume.pdf')} target="_blank" rel="noreferrer" title="Résumé">▤</a>
+        </div>
       </div>
 
       <div className="taskbar-clock">{time}</div>

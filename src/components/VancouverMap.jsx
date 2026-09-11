@@ -9,83 +9,172 @@ function mulberry32(seed) {
   }
 }
 
-function RoundedBlock({ x, y, w, h, r, fill, keyPrefix }) {
+function smoothRadii(radii, passes = 2) {
+  let r = radii.slice()
+  for (let p = 0; p < passes; p++) {
+    r = r.map((v, i) => {
+      const prev = r[(i - 1 + r.length) % r.length]
+      const next = r[(i + 1) % r.length]
+      return (prev + v * 2 + next) / 4
+    })
+  }
+  return r
+}
+
+function blobPath(cx, cy, rx, ry, n, seed, irregularity = 0.22) {
+  const rng = mulberry32(seed)
+  const radii = smoothRadii(
+    Array.from({ length: n }, () => 1 + (rng() - 0.5) * 2 * irregularity),
+    2
+  )
+  const pts = radii.map((r, i) => {
+    const angle = (i / n) * Math.PI * 2
+    return [cx + Math.cos(angle) * rx * r, cy + Math.sin(angle) * ry * r]
+  })
+  const d = [`M ${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`]
+  const len = pts.length
+  for (let i = 0; i < len; i++) {
+    const p0 = pts[(i - 1 + len) % len]
+    const p1 = pts[i]
+    const p2 = pts[(i + 1) % len]
+    const p3 = pts[(i + 2) % len]
+    const c1x = p1[0] + (p2[0] - p0[0]) / 6
+    const c1y = p1[1] + (p2[1] - p0[1]) / 6
+    const c2x = p2[0] - (p3[0] - p1[0]) / 6
+    const c2y = p2[1] - (p3[1] - p1[1]) / 6
+    d.push(`C ${c1x.toFixed(1)} ${c1y.toFixed(1)}, ${c2x.toFixed(1)} ${c2y.toFixed(1)}, ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`)
+  }
+  d.push('Z')
+  return d.join(' ')
+}
+
+function scatterInEllipse(cx, cy, rx, ry, count, seed, margin = 0.7) {
+  const rng = mulberry32(seed)
+  const pts = []
+  for (let i = 0; i < count; i++) {
+    const ang = rng() * Math.PI * 2
+    const rad = Math.sqrt(rng()) * margin
+    pts.push([cx + Math.cos(ang) * rx * rad, cy + Math.sin(ang) * ry * rad])
+  }
+  return pts
+}
+
+function Blob({ cx, cy, rx, ry, n = 11, seed, irregularity, fill, opacity }) {
+  return <path d={blobPath(cx, cy, rx, ry, n, seed, irregularity)} fill={fill} opacity={opacity} />
+}
+
+const iconProps = (color, width = 1.5) => ({
+  stroke: color,
+  strokeWidth: width,
+  fill: 'none',
+  strokeLinecap: 'round',
+  strokeLinejoin: 'round',
+})
+
+function TreeIcon({ x, y, s = 1, color }) {
   return (
-    <>
-      <rect key={`${keyPrefix}-a`} x={x + r} y={y} width={w - 2 * r} height={h} fill={fill} />
-      <rect key={`${keyPrefix}-b`} x={x} y={y + r} width={w} height={h - 2 * r} fill={fill} />
-    </>
+    <g transform={`translate(${x},${y}) scale(${s})`} {...iconProps(color)}>
+      <circle cx="0" cy="-3.2" r="3" />
+      <line x1="0" y1="-0.4" x2="0" y2="3" />
+    </g>
   )
 }
 
-function Peak({ cx, baseY, width, height, bodyColor, midColor, snowColor }) {
-  const steps = 6
-  const rects = []
-  for (let i = 0; i < steps; i++) {
-    const t = i / steps
-    const w = width * (1 - t * 0.92)
-    const y = baseY - height * t
-    const stepH = height / steps + 1
-    let fill = bodyColor
-    if (i >= steps - 2) fill = snowColor
-    else if (i >= steps - 4) fill = midColor
-    rects.push(
-      <rect key={i} x={cx - w / 2} y={y - stepH} width={w} height={stepH} fill={fill} />
-    )
-  }
-  return <>{rects}</>
+function PeakIcon({ x, y, s = 1, color }) {
+  return (
+    <path
+      d="M -7 4 L 0 -8 L 7 4 Z M -3 4 L 0 -1 L 3 4"
+      transform={`translate(${x},${y}) scale(${s})`}
+      {...iconProps(color)}
+    />
+  )
 }
 
-const PEAKS = [
-  { cx: 20, base: 30, w: 34, h: 24 },
-  { cx: 56, base: 30, w: 28, h: 16 },
-  { cx: 90, base: 30, w: 38, h: 28 },
-  { cx: 128, base: 30, w: 26, h: 15 },
-  { cx: 160, base: 30, w: 34, h: 23 },
-  { cx: 196, base: 30, w: 28, h: 16 },
-  { cx: 230, base: 30, w: 38, h: 27 },
-  { cx: 266, base: 30, w: 28, h: 15 },
-  { cx: 300, base: 30, w: 32, h: 21 },
-]
+function BuildingIcon({ x, y, s = 1, color, h = 9 }) {
+  return (
+    <g transform={`translate(${x},${y}) scale(${s})`} {...iconProps(color, 1.4)}>
+      <rect x="-3" y={-h} width="6" height={h} />
+      <line x1="-1.4" y1={-h + 2.5} x2="1.4" y2={-h + 2.5} />
+    </g>
+  )
+}
 
-const rngWater = mulberry32(7)
-const WATER_SPARKLES = Array.from({ length: 70 }, () => ({
-  x: rngWater() * 320,
-  y: 30 + rngWater() * 150,
-  s: rngWater() > 0.7 ? 4 : 2,
-}))
+function TowerIcon({ x, y, s = 1, color, accent }) {
+  return (
+    <g transform={`translate(${x},${y}) scale(${s})`}>
+      <line x1="0" y1="0" x2="0" y2="-22" stroke={color} strokeWidth="2" strokeLinecap="round" />
+      <ellipse cx="0" cy="-24" rx="7" ry="3" fill={accent} />
+      <line x1="0" y1="-27" x2="0" y2="-31" stroke={color} strokeWidth="1.6" strokeLinecap="round" />
+    </g>
+  )
+}
+
+function DomeIcon({ x, y, s = 1, color }) {
+  return (
+    <g transform={`translate(${x},${y}) scale(${s})`} {...iconProps(color)}>
+      <path d="M -10 2 A 10 10 0 0 1 10 2" />
+      <line x1="-11" y1="2" x2="11" y2="2" />
+      <line x1="-7" y1="1.3" x2="-7" y2="2" />
+      <line x1="0" y1="-8" x2="0" y2="2" />
+      <line x1="7" y1="1.3" x2="7" y2="2" />
+    </g>
+  )
+}
+
+function MarketIcon({ x, y, s = 1, color }) {
+  return (
+    <g transform={`translate(${x},${y}) scale(${s})`} {...iconProps(color, 1.4)}>
+      <path d="M -7 3 L 0 -6 L 7 3 Z" />
+      <line x1="-8" y1="3" x2="8" y2="3" />
+    </g>
+  )
+}
+
+function HouseIcon({ x, y, s = 1, color }) {
+  return (
+    <path
+      d="M -3.4 3.5 L -3.4 -1 L 0 -4.2 L 3.4 -1 L 3.4 3.5 Z"
+      transform={`translate(${x},${y}) scale(${s})`}
+      {...iconProps(color, 1.3)}
+    />
+  )
+}
+
+function BoatIcon({ x, y, s = 1, color }) {
+  return (
+    <g transform={`translate(${x},${y}) scale(${s})`} {...iconProps(color, 1.2)}>
+      <path d="M -5 2 L 5 2 L 3.4 5 L -3.4 5 Z" />
+      <line x1="0" y1="2" x2="0" y2="-5" />
+      <path d="M 0.3 -5 L 4 -1.2 L 0.3 -1.2 Z" fill={color} stroke="none" />
+    </g>
+  )
+}
 
 const rngTree = mulberry32(42)
-const PARK_TREES = Array.from({ length: 22 }, () => {
-  const x = 24 + rngTree() * 76
-  const y = 46 + rngTree() * 44
-  const s = 5 + Math.floor(rngTree() * 4)
-  const shade = rngTree() > 0.5 ? 'var(--park-light)' : 'var(--park)'
-  return { x, y, s, shade }
-})
-
-const rngWin = mulberry32(99)
-const DOWNTOWN_WINDOWS = Array.from({ length: 60 }, () => ({
-  x: 116 + Math.floor(rngWin() * 34) * 4,
-  y: 52 + Math.floor(rngWin() * 18) * 4,
-  lit: rngWin() > 0.45,
+const PARK_TREES = scatterInEllipse(64, 64, 44, 26, 16, 11).map(([x, y]) => ({
+  x, y, s: 0.8 + rngTree() * 0.6,
 }))
 
-const rngTower = mulberry32(15)
-const SKYLINE = [128, 148, 168, 196, 216, 236].map((x) => ({
-  x,
-  h: 8 + Math.floor(rngTower() * 22),
-  w: 10 + Math.floor(rngTower() * 6),
+const rngBldg = mulberry32(88)
+const DOWNTOWN_BUILDINGS = scatterInEllipse(186, 92, 62, 30, 13, 23).map(([x, y]) => ({
+  x, y, s: 0.7 + rngBldg() * 0.7, h: 6 + rngBldg() * 8,
 }))
 
-const rngHouse = mulberry32(3)
-const SOUTH_BLOCKS = Array.from({ length: 26 }, () => ({
-  x: 8 + rngHouse() * 300,
-  y: 166 + rngHouse() * 20,
-  w: 8 + rngHouse() * 10,
-  h: 5 + rngHouse() * 5,
-  shade: rngHouse() > 0.5 ? 'var(--land-alt)' : 'var(--park-dark)',
+const rngHouse = mulberry32(5)
+const SOUTH_HOUSES = scatterInEllipse(160, 205, 165, 20, 18, 31).map(([x, y]) => ({
+  x, y, s: 0.7 + rngHouse() * 0.5,
 }))
+
+const WATER_WAVES = [
+  'M 0 46 Q 20 42 40 46 T 80 46 T 120 46',
+  'M 0 104 Q 24 100 48 104 T 96 104',
+  'M 220 34 Q 240 30 260 34 T 300 34',
+  'M 10 150 Q 30 146 50 150 T 90 150',
+]
+
+const BOATS = [
+  { x: 30, y: 108 }, { x: 285, y: 72 }, { x: 95, y: 158 },
+]
 
 export default function VancouverMap() {
   return (
@@ -94,96 +183,67 @@ export default function VancouverMap() {
       viewBox="0 0 320 192"
       xmlns="http://www.w3.org/2000/svg"
       role="img"
-      aria-label="Pixel-art map of Vancouver, BC"
+      aria-label="Stylized map of Vancouver, BC"
     >
-      {/* ---- water ---- */}
-      <rect x="0" y="0" width="320" height="192" fill="var(--water-deep)" />
-      <rect x="0" y="26" width="320" height="166" fill="var(--water-mid)" opacity="0.35" />
-      {WATER_SPARKLES.map((s, i) => (
-        <rect key={i} x={s.x} y={s.y} width={s.s} height={s.s} fill="var(--water-light)" opacity="0.55" />
+      {/* water */}
+      <rect x="0" y="0" width="320" height="192" fill="var(--v-water)" />
+      {WATER_WAVES.map((d, i) => (
+        <path key={i} d={d} fill="none" stroke="var(--v-water-line)" strokeWidth="1.4" strokeLinecap="round" opacity="0.5" />
       ))}
-      <rect x="0" y="60" width="320" height="2" fill="var(--water-light)" opacity="0.25" />
-      <rect x="0" y="118" width="320" height="2" fill="var(--water-light)" opacity="0.25" />
-
-      {/* ---- North Shore mountains ---- */}
-      <rect x="0" y="0" width="320" height="6" fill="var(--mountain)" />
-      {PEAKS.map((p, i) => (
-        <Peak
-          key={i}
-          cx={p.cx}
-          baseY={p.base}
-          width={p.w}
-          height={p.h}
-          bodyColor="var(--mountain)"
-          midColor="var(--mountain-mid)"
-          snowColor="var(--mountain-snow)"
-        />
+      {BOATS.map((b, i) => (
+        <BoatIcon key={i} x={b.x} y={b.y} s={1.1} color="var(--v-water-line)" />
       ))}
-      <rect x="0" y="28" width="320" height="3" fill="var(--park-dark)" opacity="0.5" />
 
-      {/* ---- Lions Gate style bridge ---- */}
-      <rect x="70" y="0" width="4" height="46" fill="var(--bridge)" />
-      <rect x="63" y="6" width="18" height="2" fill="var(--bridge)" />
-      <rect x="63" y="20" width="18" height="2" fill="var(--bridge)" />
-      <rect x="63" y="34" width="18" height="2" fill="var(--bridge)" />
-      <rect x="60" y="0" width="3" height="10" fill="var(--mountain)" />
-      <rect x="81" y="0" width="3" height="10" fill="var(--mountain)" />
+      {/* North Shore mountains */}
+      <Blob cx={160} cy={-6} rx={185} ry={24} n={14} seed={4} irregularity={0.16} fill="var(--v-mountain)" />
+      {[30, 75, 130, 190, 245, 290].map((x, i) => (
+        <PeakIcon key={i} x={x} y={8} s={0.9 + (i % 3) * 0.15} color="var(--v-mountain-line)" />
+      ))}
 
-      {/* ---- Stanley Park (rounded + sand trim) ---- */}
-      <RoundedBlock keyPrefix="park-sand" x={12} y={30} w={104} h={70} r={16} fill="var(--sand)" />
-      <RoundedBlock keyPrefix="park" x={16} y={34} w={94} h={62} r={14} fill="var(--park)" />
+      {/* bridge */}
+      <line x1="70" y1="12" x2="70" y2="42" stroke="var(--v-bridge)" strokeWidth="3" strokeLinecap="round" />
+      <circle cx="70" cy="12" r="2.4" fill="var(--v-bridge)" />
+      <circle cx="70" cy="42" r="2.4" fill="var(--v-bridge)" />
+
+      {/* Stanley Park */}
+      <Blob cx={64} cy={64} rx={50} ry={34} n={12} seed={17} irregularity={0.2} fill="var(--v-park)" />
       {PARK_TREES.map((t, i) => (
-        <rect key={i} x={t.x} y={t.y} width={t.s} height={t.s} fill={t.shade} />
+        <TreeIcon key={i} x={t.x} y={t.y} s={t.s} color="var(--v-park-line)" />
       ))}
 
-      {/* ---- Downtown peninsula (rounded + sand trim + skyline) ---- */}
-      <RoundedBlock keyPrefix="dt-sand" x={108} y={44} w={152} h={88} r={10} fill="var(--sand)" />
-      <RoundedBlock keyPrefix="dt" x={112} y={48} w={144} h={80} r={8} fill="var(--map-downtown-dark)" />
-
-      {SKYLINE.map((b, i) => (
-        <rect key={i} x={b.x} y={48 - b.h} width={b.w} height={b.h + 4} fill={i % 2 === 0 ? 'var(--map-downtown)' : 'var(--map-downtown-alt)'} />
+      {/* Downtown */}
+      <Blob cx={186} cy={92} rx={76} ry={42} n={13} seed={29} irregularity={0.17} fill="var(--v-downtown)" />
+      {DOWNTOWN_BUILDINGS.map((b, i) => (
+        <BuildingIcon key={i} x={b.x} y={b.y} s={b.s} h={b.h} color="var(--v-downtown-line)" />
       ))}
-      {DOWNTOWN_WINDOWS.map((w, i) => (
-        <rect key={i} x={w.x} y={w.y} width="2" height="2" fill={w.lit ? 'var(--window-lit)' : 'var(--map-downtown-dark)'} opacity={w.lit ? 0.95 : 0.4} />
+      <TowerIcon x={192} y={86} color="var(--v-downtown-line)" accent="var(--v-accent)" />
+
+      {/* Canada Place sails */}
+      <g transform="translate(150,58)" {...iconProps('var(--v-downtown-line)', 1.4)}>
+        <path d="M -14 8 L -8 -6 L -2 8 Z" />
+        <path d="M -2 8 L 4 -10 L 10 8 Z" />
+        <path d="M 10 8 L 15 -4 L 20 8 Z" />
+        <line x1="-16" y1="8" x2="22" y2="8" />
+      </g>
+
+      {/* Granville Island */}
+      <Blob cx={168} cy={142} rx={30} ry={16} n={10} seed={51} irregularity={0.22} fill="var(--v-island)" />
+      <MarketIcon x={168} y={144} s={1.3} color="var(--v-island-line)" />
+
+      {/* Science World */}
+      <Blob cx={252} cy={144} rx={27} ry={15} n={10} seed={63} irregularity={0.22} fill="var(--v-science)" />
+      <DomeIcon x={252} y={148} s={1.3} color="var(--v-science-line)" />
+
+      {/* South Vancouver */}
+      <Blob cx={160} cy={210} rx={175} ry={30} n={16} seed={8} irregularity={0.1} fill="var(--v-south)" />
+      {SOUTH_HOUSES.map((h, i) => (
+        <HouseIcon key={i} x={h.x} y={h.y} s={h.s} color="var(--v-south-line)" />
       ))}
 
-      {/* landmark tower (Harbour Centre style) */}
-      <rect x="182" y="20" width="6" height="30" fill="var(--map-downtown-alt)" />
-      <rect x="177" y="16" width="16" height="6" fill="var(--window-lit)" />
-      <rect x="184" y="10" width="2" height="8" fill="var(--map-downtown-alt)" />
-
-      {/* Canada Place pier + sails */}
-      <rect x="140" y="30" width="40" height="18" fill="var(--map-pier)" />
-      <rect x="146" y="20" width="6" height="12" fill="#f4f4f8" />
-      <rect x="157" y="17" width="6" height="15" fill="#f4f4f8" />
-      <rect x="168" y="20" width="6" height="12" fill="#f4f4f8" />
-
-      {/* Gastown warm accent */}
-      <rect x="230" y="48" width="26" height="26" fill="var(--island)" opacity="0.28" />
-
-      {/* ---- Granville Island ---- */}
-      <RoundedBlock keyPrefix="gi-sand" x={140} y={122} w={56} h={26} r={8} fill="var(--sand)" />
-      <RoundedBlock keyPrefix="gi" x={144} y={126} w={48} h={18} r={6} fill="var(--island)" />
-      <rect x="150" y="130" width="10" height="8" fill="var(--island-roof)" />
-      <rect x="164" y="130" width="10" height="8" fill="var(--map-downtown-dark)" />
-      <rect x="178" y="130" width="8" height="8" fill="var(--island-roof)" />
-      <rect x="130" y="150" width="6" height="3" fill="var(--sand)" opacity="0.8" />
-      <rect x="200" y="146" width="6" height="3" fill="var(--sand)" opacity="0.8" />
-
-      {/* ---- Science World dome ---- */}
-      <RoundedBlock keyPrefix="sw-sand" x={234} y={122} w={44} h={26} r={8} fill="var(--sand)" />
-      <RoundedBlock keyPrefix="sw" x={238} y={126} w={36} h={18} r={6} fill="var(--island)" />
-      <rect x="248" y="112" width="20" height="4" fill="var(--mountain-snow)" opacity="0.9" />
-      <rect x="251" y="106" width="14" height="4" fill="var(--mountain-snow)" opacity="0.85" />
-      <rect x="254" y="100" width="8" height="4" fill="var(--mountain-snow)" opacity="0.8" />
-      <rect x="257" y="95" width="2" height="4" fill="var(--window-lit)" />
-
-      {/* ---- South Vancouver ---- */}
-      <rect x="0" y="162" width="320" height="30" fill="var(--land)" />
-      <rect x="0" y="162" width="320" height="3" fill="var(--sand)" opacity="0.6" />
-      {SOUTH_BLOCKS.map((b, i) => (
-        <rect key={i} x={b.x} y={b.y} width={b.w} height={b.h} fill={b.shade} />
-      ))}
+      {/* atmosphere labels */}
+      <text x="10" y="12" className="map-label-text">NORTH SHORE</text>
+      <text x="10" y="182" className="map-label-text">ENGLISH BAY</text>
+      <text x="230" y="182" className="map-label-text">SOUTH VANCOUVER</text>
     </svg>
   )
 }

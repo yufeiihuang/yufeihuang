@@ -5,31 +5,27 @@
   --border-light: #a89fd6;
   --border-dark: #05030a;
 
-  --water-deep: #121a4a;
-  --water-mid: #223a8f;
-  --water-light: #3f66d6;
-  --mountain: #3d2a5c;
-  --mountain-mid: #6b4587;
-  --mountain-snow: #f3e9ff;
-  --park: #1f7a3e;
-  --park-light: #3fbf63;
-  --park-dark: #0f4a22;
-  --sand: #e8c98a;
   --downtown: #7a56ad;
   --downtown-alt: #9873c9;
   --downtown-dark: #4f3a75;
 
-  --map-downtown-dark: #6b3226;
-  --map-downtown: #c9603f;
-  --map-downtown-alt: #e0895a;
-  --map-pier: #9c8a72;
-
-  --window-lit: #ffd76a;
-  --island: #e0913f;
-  --island-roof: #d9455a;
-  --land: #2f6b48;
-  --land-alt: #4a8a5c;
-  --bridge: #c99a6a;
+  /* flat-illustration map palette */
+  --v-water: #1a2456;
+  --v-water-line: #5877c9;
+  --v-mountain: #6b5296;
+  --v-mountain-line: #ece2ff;
+  --v-park: #2aa64c;
+  --v-park-line: #eafff0;
+  --v-downtown: #e0673f;
+  --v-downtown-line: #fff1e2;
+  --v-island: #f0b23e;
+  --v-island-line: #4a2f10;
+  --v-science: #3fb8c9;
+  --v-science-line: #eafdff;
+  --v-south: #4a7a4f;
+  --v-south-line: #eafff0;
+  --v-bridge: #d9a95f;
+  --v-accent: #ffd76a;
 
   --amber: #ffb000;
   --cyan: #38f0e0;
@@ -67,11 +63,6 @@ button {
 
 a {
   color: var(--cyan);
-}
-
-img, svg {
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
 }
 
 ::selection {

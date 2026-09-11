@@ -118,7 +118,14 @@
   width: 100%;
   height: 100%;
   display: block;
-  shape-rendering: crispEdges;
+}
+
+.map-label-text {
+  font-family: var(--font-pixel);
+  font-size: 6px;
+  fill: var(--text);
+  opacity: 0.4;
+  letter-spacing: 0.5px;
 }
 
 .map-title {
@@ -176,7 +183,7 @@
   position: absolute;
   inset: -6px;
   border: 2px solid var(--amber);
-  border-radius: 2px;
+  border-radius: 50%;
   opacity: 0;
   animation: ping 2.6s ease-out infinite;
 }
@@ -303,6 +310,53 @@
 
 .dock-icon:hover {
   background: var(--downtown-dark);
+}
+
+.recruiter-tip {
+  position: absolute;
+  bottom: 120%;
+  right: 0;
+  width: 200px;
+  background: var(--panel-light);
+  border: 2px solid var(--border-dark);
+  box-shadow: inset 1px 1px 0 var(--border-light), 4px 4px 0 rgba(0,0,0,0.4);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.4;
+  padding: 10px 22px 10px 10px;
+  animation: tip-bob 2.4s ease-in-out infinite;
+}
+
+.recruiter-tip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  right: 14px;
+  border: 7px solid transparent;
+  border-top-color: var(--panel-light);
+}
+
+.recruiter-tip-close {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 16px;
+  height: 16px;
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  font-size: 13px;
+  line-height: 1;
+  padding: 0;
+}
+
+.recruiter-tip-close:hover {
+  color: var(--amber);
+}
+
+@keyframes tip-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
 }
 
 .taskbar-clock {

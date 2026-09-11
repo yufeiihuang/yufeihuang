@@ -41,7 +41,7 @@ export default function AboutWindow() {
 
       <p style={{ marginTop: 14 }}>{profile.bio}</p>
 
-      <h4 className="win-sub-heading">SKILLZ</h4>
+      <h4 className="win-sub-heading">SKILLS</h4>
       <div className="tag-row">
         {profile.skills.map((s) => (
           <span className="tag" key={s}>{s}</span>
