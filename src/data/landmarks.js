@@ -1,0 +1,38 @@
+export const landmarks = [
+  {
+    id: 'about',
+    name: 'Stanley Park',
+    subtitle: 'About Me',
+    x: 62,
+    y: 62,
+    icon: 'tree',
+    windowTitle: 'about.txt',
+  },
+  {
+    id: 'resume',
+    name: 'Downtown',
+    subtitle: 'Résumé',
+    x: 184,
+    y: 84,
+    icon: 'building',
+    windowTitle: 'resume.pdf',
+  },
+  {
+    id: 'github',
+    name: 'Science World',
+    subtitle: 'GitHub',
+    x: 258,
+    y: 140,
+    icon: 'dome',
+    windowTitle: 'github.exe',
+  },
+  {
+    id: 'projects',
+    name: 'Granville Island',
+    subtitle: 'Projects',
+    x: 168,
+    y: 138,
+    icon: 'market',
+    windowTitle: 'projects/',
+  },
+]

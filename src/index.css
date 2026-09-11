@@ -1,0 +1,136 @@
+:root {
+  --bg: #0b0f1a;
+  --panel: #171227;
+  --panel-light: #241c3a;
+  --border-light: #a89fd6;
+  --border-dark: #05030a;
+
+  --water-deep: #14335c;
+  --water-light: #1f4d85;
+  --mountain: #4b3f6b;
+  --mountain-light: #6a5a92;
+  --park: #1f6b3a;
+  --park-light: #2f8a4c;
+  --downtown: #6b5b8a;
+  --downtown-alt: #7c6a9c;
+  --downtown-dark: #5a4a78;
+  --island: #c98a4b;
+  --land: #3f6b45;
+  --bridge: #b08968;
+
+  --amber: #ffb000;
+  --cyan: #38f0e0;
+  --magenta: #ff4fa3;
+  --green: #4dff88;
+
+  --text: #eae6ff;
+  --text-dim: #9d93c9;
+
+  --font-pixel: 'Press Start 2P', monospace;
+  --font-mono: 'VT323', monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-mono);
+  overflow: hidden;
+  -webkit-font-smoothing: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+a {
+  color: var(--cyan);
+}
+
+img, svg {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+::selection {
+  background: var(--magenta);
+  color: var(--bg);
+}
+
+/* CRT overlay */
+.crt-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  mix-blend-mode: normal;
+}
+
+.crt-scanlines {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.18) 0px,
+    rgba(0, 0, 0, 0.18) 1px,
+    transparent 2px,
+    transparent 3px
+  );
+  animation: scan-shift 8s linear infinite;
+}
+
+.crt-vignette {
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 18vw rgba(0, 0, 0, 0.75);
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.35) 100%);
+}
+
+.crt-flicker {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.02);
+  animation: flicker 6.5s infinite;
+}
+
+@keyframes scan-shift {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 120px; }
+}
+
+@keyframes flicker {
+  0%, 96%, 100% { opacity: 0; }
+  97% { opacity: 1; }
+  98% { opacity: 0; }
+  99% { opacity: 0.5; }
+}
+
+.pixel-font {
+  font-family: var(--font-pixel);
+}
+
+/* retro scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--downtown-alt) var(--panel);
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: var(--panel);
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--downtown-alt);
+  border: 2px solid var(--panel);
+}
