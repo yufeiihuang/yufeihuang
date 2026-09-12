@@ -15,6 +15,8 @@ import { landmarks } from './data/landmarks.js'
 import { profile } from './data/content.js'
 import PassportWindow from './components/PassportWindow.jsx'
 import NightLights from './components/NightLights.jsx'
+import OrcaCameo from './components/OrcaCameo.jsx'
+import MapRain from './components/MapRain.jsx'
 import './App.css'
 
 const CONTENT = { about: AboutWindow, resume: ResumeWindow, projects: ProjectsWindow, sorora: SororaWindow, contact: ContactWindow }
@@ -79,8 +81,10 @@ export default function App() {
           <div className="map-frame">
             <div className="map-artwork">
               <VancouverMap />
-              <MapAtmosphere />
+              <MapAtmosphere onBoatRide={() => openLandmark(landmarks[Math.floor(Math.random() * landmarks.length)].id)} />
+              <MapRain />
               {night && <NightLights />}
+              <OrcaCameo />
               <div className="map-pins">{landmarks.map(l => <Landmark key={l.id} landmark={l} onOpen={openLandmark} />)}</div>
             </div>
             <div className="hero-copy">

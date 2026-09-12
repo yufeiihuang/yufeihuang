@@ -22,7 +22,7 @@ export default function BootScreen({ onFinish }) {
     window.addEventListener('keydown', advance)
     return () => window.removeEventListener('keydown', advance)
   }, [done, onFinish])
-  return <main className="boot-screen" style={{ backgroundImage: `linear-gradient(90deg, rgba(8, 27, 43, .97), rgba(8, 27, 43, .7)), url(${withBase('images/vancouver-pixel-map.png')})` }}>
+  return <main className="boot-screen" style={{ backgroundImage: `linear-gradient(90deg, rgba(8, 27, 43, .97), rgba(8, 27, 43, .7)), url(${withBase('images/vancouver-pixel-map-v2.png')})` }}>
     <div className="boot-card">
       <p className="eyebrow">YUFEI–OS / EST. VANCOUVER</p>
       <div className="boot-emblem" aria-hidden="true">✦</div>

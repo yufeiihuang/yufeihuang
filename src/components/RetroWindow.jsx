@@ -1,10 +1,23 @@
 import { useEffect, useRef, useState } from 'react'
+import SeagullThief from './SeagullThief.jsx'
 import { useDraggable } from '../hooks/useDraggable.js'
 
 export default function RetroWindow({ id, title, icon, initial, zIndex, focused, onClose, onFocus, children }) {
+  const [gull, setGull] = useState(false)
+  const gullVisited = useRef(false)
   const [expanded, setExpanded] = useState(false)
   const { pos, onPointerDown } = useDraggable(initial)
 
+  useEffect(() => {
+    if (!focused || gullVisited.current) return
+    const timer = setTimeout(() => { gullVisited.current = true; setGull(true) }, 9000)
+    return () => clearTimeout(timer)
+  }, [focused])
+  useEffect(() => {
+    if (!gull) return
+    const timer = setTimeout(() => setGull(false), 2800)
+    return () => clearTimeout(timer)
+  }, [gull])
   const dialogRef = useRef(null)
   useEffect(() => {
     if (focused && !dialogRef.current?.contains(document.activeElement)) {
@@ -26,7 +39,7 @@ export default function RetroWindow({ id, title, icon, initial, zIndex, focused,
       role="dialog"
       aria-label={title}
     >
-      <div className="retro-titlebar" onPointerDown={expanded ? undefined : onPointerDown}>
+      <div className={`retro-titlebar${gull ? ' gull-visiting' : ''}`} onPointerDown={expanded ? undefined : onPointerDown}>
         <span className="retro-titlebar-icon">{icon}</span>
         <span className="retro-titlebar-title">{title}</span>
         <button
@@ -47,8 +60,9 @@ export default function RetroWindow({ id, title, icon, initial, zIndex, focused,
           onClick={(e) => { e.stopPropagation(); onClose(id) }}
           aria-label="Close window"
         >
-          ×
+          <span className="close-glyph">×</span>
         </button>
+        {gull && <SeagullThief />}
       </div>
       <div className="retro-window-body">{children}</div>
       {!expanded && <div className="window-resize-hint" aria-hidden="true">Drag the bottom-right corner to resize ↘</div>}
