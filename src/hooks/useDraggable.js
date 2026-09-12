@@ -5,7 +5,7 @@ export function useDraggable(initial) {
   const dragState = useRef(null)
 
   const onPointerDown = useCallback((e) => {
-    if (window.innerWidth <= 680) return
+    if (window.innerWidth <= 760) return
     dragState.current = {
       startX: e.clientX,
       startY: e.clientY,
@@ -21,8 +21,8 @@ export function useDraggable(initial) {
     const dx = e.clientX - dragState.current.startX
     const dy = e.clientY - dragState.current.startY
     setPos({
-      x: Math.max(4, dragState.current.origX + dx),
-      y: Math.max(4, dragState.current.origY + dy),
+      x: Math.max(4, Math.min(window.innerWidth - 100, dragState.current.origX + dx)),
+      y: Math.max(4, Math.min(window.innerHeight - 60, dragState.current.origY + dy)),
     })
   }, [])
 

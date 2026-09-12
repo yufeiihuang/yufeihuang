@@ -6,7 +6,7 @@ export default function ResumeWindow() {
 
   return (
     <div>
-      <h3 className="win-heading">★ RESUME — DOWNTOWN VANCOUVER</h3>
+      <h3 className="win-heading">★ RESUME — CANADA PLACE</h3>
 
       <div style={{ marginBottom: 12 }}>
         <a className="btn" href={pdf} target="_blank" rel="noreferrer">▤ Open PDF</a>

@@ -3,7 +3,7 @@ import { projects } from '../../data/content.js'
 export default function ProjectsWindow() {
   return (
     <div>
-      <h3 className="win-heading">★ PROJECTS — GRANVILLE ISLAND MARKET</h3>
+      <h3 className="win-heading">★ PROJECTS — DOWNTOWN</h3>
       {projects.map((p) => (
         <div className="project-card" key={p.name}>
           <div className="project-name">{p.name}</div>
