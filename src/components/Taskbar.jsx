@@ -84,14 +84,14 @@ export default function Taskbar({ openWindows, focusedId, onFocusWindow, onOpenL
         {!tipDismissed && (
           <div className="recruiter-tip">
             <button className="recruiter-tip-close" onClick={dismissTip} aria-label="Dismiss">×</button>
-            Recruiter? Résumé, GitHub &amp; contact are all right here ↓
+            Recruiter? Resume, GitHub &amp; contact are all right here ↓
           </div>
         )}
         <div className="taskbar-dock">
           <a className="dock-icon" href={`mailto:${profile.email}`} title="Email">✉</a>
           <a className="dock-icon" href={profile.linkedin} target="_blank" rel="noreferrer" title="LinkedIn">in</a>
           <a className="dock-icon" href={profile.github} target="_blank" rel="noreferrer" title="GitHub">⌂</a>
-          <a className="dock-icon" href={withBase('resume.pdf')} target="_blank" rel="noreferrer" title="Résumé">▤</a>
+          <a className="dock-icon" href={withBase('resume.pdf')} target="_blank" rel="noreferrer" title="Resume">▤</a>
         </div>
       </div>
 

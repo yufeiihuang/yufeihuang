@@ -1,3 +1,11 @@
+import Tile from './Tile.jsx'
+
+const COLS = 40
+const ROWS = 24
+const TS = 16
+const MAP_W = COLS * TS
+const MAP_H = ROWS * TS
+
 function mulberry32(seed) {
   let a = seed
   return function () {
@@ -9,241 +17,186 @@ function mulberry32(seed) {
   }
 }
 
-function smoothRadii(radii, passes = 2) {
-  let r = radii.slice()
-  for (let p = 0; p < passes; p++) {
-    r = r.map((v, i) => {
-      const prev = r[(i - 1 + r.length) % r.length]
-      const next = r[(i + 1) % r.length]
-      return (prev + v * 2 + next) / 4
-    })
-  }
-  return r
+const pctX = (px) => `${(px / MAP_W) * 100}%`
+const pctY = (px) => `${(px / MAP_H) * 100}%`
+
+const REGIONS = {
+  stanley: { cx: 8, cy: 8.5, rx: 6.4, ry: 4.6 },
+  downtown: { cx: 23, cy: 11.5, rx: 9.5, ry: 5.6 },
+  granville: { cx: 21, cy: 17.5, rx: 3.9, ry: 2.1 },
+  scienceworld: { cx: 31.5, cy: 18, rx: 3.5, ry: 2 },
 }
 
-function blobPath(cx, cy, rx, ry, n, seed, irregularity = 0.22) {
-  const rng = mulberry32(seed)
-  const radii = smoothRadii(
-    Array.from({ length: n }, () => 1 + (rng() - 0.5) * 2 * irregularity),
-    2
-  )
-  const pts = radii.map((r, i) => {
-    const angle = (i / n) * Math.PI * 2
-    return [cx + Math.cos(angle) * rx * r, cy + Math.sin(angle) * ry * r]
-  })
-  const d = [`M ${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`]
-  const len = pts.length
-  for (let i = 0; i < len; i++) {
-    const p0 = pts[(i - 1 + len) % len]
-    const p1 = pts[i]
-    const p2 = pts[(i + 1) % len]
-    const p3 = pts[(i + 2) % len]
-    const c1x = p1[0] + (p2[0] - p0[0]) / 6
-    const c1y = p1[1] + (p2[1] - p0[1]) / 6
-    const c2x = p2[0] - (p3[0] - p1[0]) / 6
-    const c2y = p2[1] - (p3[1] - p1[1]) / 6
-    d.push(`C ${c1x.toFixed(1)} ${c1y.toFixed(1)}, ${c2x.toFixed(1)} ${c2y.toFixed(1)}, ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`)
-  }
-  d.push('Z')
-  return d.join(' ')
+function inEllipse(r, x, y) {
+  const dx = (x - r.cx) / r.rx
+  const dy = (y - r.cy) / r.ry
+  return dx * dx + dy * dy <= 1
 }
 
-function scatterInEllipse(cx, cy, rx, ry, count, seed, margin = 0.7) {
+function classify(cx, cy) {
+  if (cy <= 1.5) return 'mountain'
+  if (cy >= 21) return 'south'
+  if (inEllipse(REGIONS.downtown, cx, cy)) return 'downtown'
+  if (inEllipse(REGIONS.stanley, cx, cy)) return 'stanley'
+  if (inEllipse(REGIONS.granville, cx, cy)) return 'granville'
+  if (inEllipse(REGIONS.scienceworld, cx, cy)) return 'scienceworld'
+  return 'water'
+}
+
+const GRASS = [[5, 0], [5, 1], [5, 0], [5, 0]]
+const WATER = [[0, 0], [1, 0], [0, 1], [1, 1], [0, 0], [1, 0]]
+const SAND = [[8, 0], [8, 1]]
+
+const rngBase = mulberry32(101)
+const GRID_CELLS = []
+for (let row = 0; row < ROWS; row++) {
+  for (let col = 0; col < COLS; col++) {
+    const kind = classify(col + 0.5, row + 0.5)
+    let set = WATER
+    if (kind === 'mountain' || kind === 'downtown' || kind === 'stanley' || kind === 'south') set = GRASS
+    else if (kind === 'granville' || kind === 'scienceworld') set = SAND
+    const pick = set[Math.floor(rngBase() * set.length)]
+    GRID_CELLS.push({ col, row, tile: pick })
+  }
+}
+
+function scatterEllipse(r, count, seed, margin = 0.78) {
   const rng = mulberry32(seed)
   const pts = []
   for (let i = 0; i < count; i++) {
     const ang = rng() * Math.PI * 2
     const rad = Math.sqrt(rng()) * margin
-    pts.push([cx + Math.cos(ang) * rx * rad, cy + Math.sin(ang) * ry * rad])
+    pts.push([(r.cx + Math.cos(ang) * r.rx * rad) * TS, (r.cy + Math.sin(ang) * r.ry * rad) * TS])
   }
   return pts
 }
 
-function Blob({ cx, cy, rx, ry, n = 11, seed, irregularity, fill, opacity }) {
-  return <path d={blobPath(cx, cy, rx, ry, n, seed, irregularity)} fill={fill} opacity={opacity} />
+function scatterStrip(y0, y1, count, seed) {
+  const rng = mulberry32(seed)
+  const pts = []
+  for (let i = 0; i < count; i++) {
+    pts.push([rng() * MAP_W, (y0 + rng() * (y1 - y0)) * TS])
+  }
+  return pts
 }
 
-const iconProps = (color, width = 1.5) => ({
-  stroke: color,
-  strokeWidth: width,
-  fill: 'none',
-  strokeLinecap: 'round',
-  strokeLinejoin: 'round',
-})
+const TREES = [[14, 10], [15, 10], [16, 10], [17, 10], [19, 10], [14, 9], [16, 9]]
+const ROCKS = [[7, 14], [8, 14], [6, 15], [9, 15], [7, 16], [8, 16]]
+const FLOWERS = [[0, 7], [0, 9], [0, 12]]
 
-function TreeIcon({ x, y, s = 1, color }) {
-  return (
-    <g transform={`translate(${x},${y}) scale(${s})`} {...iconProps(color)}>
-      <circle cx="0" cy="-3.2" r="3" />
-      <line x1="0" y1="-0.4" x2="0" y2="3" />
-    </g>
-  )
+const rngT = mulberry32(42)
+const parkTrees = scatterEllipse(REGIONS.stanley, 20, 7).map(([x, y]) => ({
+  x, y, sprite: TREES[Math.floor(rngT() * TREES.length)], s: 22 + rngT() * 10,
+}))
+
+const rngR = mulberry32(19)
+const mountainRocks = scatterStrip(0, 1.6, 26, 3).map(([x, y]) => ({
+  x, y, sprite: ROCKS[Math.floor(rngR() * ROCKS.length)], s: 16 + rngR() * 8,
+}))
+const mountainTrees = scatterStrip(0.2, 1.6, 14, 33).map(([x, y]) => ({
+  x, y, sprite: TREES[3 + Math.floor(rngR() * 3)], s: 18 + rngR() * 8,
+}))
+
+const rngF = mulberry32(55)
+const flowerPatches = [
+  ...scatterEllipse(REGIONS.stanley, 6, 64, 0.6),
+  ...scatterStrip(21.3, 23, 8, 65),
+].map(([x, y]) => ({ x, y, sprite: FLOWERS[Math.floor(rngF() * FLOWERS.length)] }))
+
+const rngH = mulberry32(77)
+const COTTAGE = { roofL: [13, 21], roofR: [14, 21], wallL: [13, 22], wallR: [14, 22] }
+const houses = [
+  ...scatterEllipse(REGIONS.downtown, 9, 88, 0.72),
+  ...scatterStrip(21.4, 22.6, 6, 89),
+].map(([x, y]) => ({ x, y, s: 26 + rngH() * 6 }))
+
+const STALLS = [[10, 1], [11, 1]]
+const tents = scatterEllipse(REGIONS.granville, 4, 91, 0.55).map(([x, y], i) => ({
+  x, y, sprite: STALLS[i % 2],
+}))
+
+function pathLine(x0, y0, x1, y1, seed, step = 1.15) {
+  const rng = mulberry32(seed)
+  const dist = Math.hypot(x1 - x0, y1 - y0)
+  const n = Math.max(1, Math.round(dist / (step * TS)))
+  const pts = []
+  for (let i = 1; i < n; i++) {
+    const t = i / n
+    pts.push([
+      x0 + (x1 - x0) * t + (rng() - 0.5) * 5,
+      y0 + (y1 - y0) * t + (rng() - 0.5) * 5,
+    ])
+  }
+  return pts
 }
 
-function PeakIcon({ x, y, s = 1, color }) {
+const PATH_TILE = [7, 0]
+const paths = [
+  ...pathLine(REGIONS.stanley.cx * TS, REGIONS.stanley.cy * TS, REGIONS.downtown.cx * TS, REGIONS.downtown.cy * TS, 12),
+  ...pathLine(REGIONS.downtown.cx * TS, REGIONS.downtown.cy * TS, REGIONS.granville.cx * TS, REGIONS.granville.cy * TS, 13),
+  ...pathLine(REGIONS.downtown.cx * TS, REGIONS.downtown.cy * TS, REGIONS.scienceworld.cx * TS, REGIONS.scienceworld.cy * TS, 14),
+].map(([x, y]) => ({ x, y }))
+
+function Sprite({ x, y, s = 20, col, row }) {
   return (
-    <path
-      d="M -7 4 L 0 -8 L 7 4 Z M -3 4 L 0 -1 L 3 4"
-      transform={`translate(${x},${y}) scale(${s})`}
-      {...iconProps(color)}
+    <Tile
+      col={col}
+      row={row}
+      className="tile-sprite"
+      style={{ left: pctX(x), top: pctY(y), width: pctX(s), height: pctY(s) }}
     />
   )
 }
-
-function BuildingIcon({ x, y, s = 1, color, h = 9 }) {
-  return (
-    <g transform={`translate(${x},${y}) scale(${s})`} {...iconProps(color, 1.4)}>
-      <rect x="-3" y={-h} width="6" height={h} />
-      <line x1="-1.4" y1={-h + 2.5} x2="1.4" y2={-h + 2.5} />
-    </g>
-  )
-}
-
-function TowerIcon({ x, y, s = 1, color, accent }) {
-  return (
-    <g transform={`translate(${x},${y}) scale(${s})`}>
-      <line x1="0" y1="0" x2="0" y2="-22" stroke={color} strokeWidth="2" strokeLinecap="round" />
-      <ellipse cx="0" cy="-24" rx="7" ry="3" fill={accent} />
-      <line x1="0" y1="-27" x2="0" y2="-31" stroke={color} strokeWidth="1.6" strokeLinecap="round" />
-    </g>
-  )
-}
-
-function DomeIcon({ x, y, s = 1, color }) {
-  return (
-    <g transform={`translate(${x},${y}) scale(${s})`} {...iconProps(color)}>
-      <path d="M -10 2 A 10 10 0 0 1 10 2" />
-      <line x1="-11" y1="2" x2="11" y2="2" />
-      <line x1="-7" y1="1.3" x2="-7" y2="2" />
-      <line x1="0" y1="-8" x2="0" y2="2" />
-      <line x1="7" y1="1.3" x2="7" y2="2" />
-    </g>
-  )
-}
-
-function MarketIcon({ x, y, s = 1, color }) {
-  return (
-    <g transform={`translate(${x},${y}) scale(${s})`} {...iconProps(color, 1.4)}>
-      <path d="M -7 3 L 0 -6 L 7 3 Z" />
-      <line x1="-8" y1="3" x2="8" y2="3" />
-    </g>
-  )
-}
-
-function HouseIcon({ x, y, s = 1, color }) {
-  return (
-    <path
-      d="M -3.4 3.5 L -3.4 -1 L 0 -4.2 L 3.4 -1 L 3.4 3.5 Z"
-      transform={`translate(${x},${y}) scale(${s})`}
-      {...iconProps(color, 1.3)}
-    />
-  )
-}
-
-function BoatIcon({ x, y, s = 1, color }) {
-  return (
-    <g transform={`translate(${x},${y}) scale(${s})`} {...iconProps(color, 1.2)}>
-      <path d="M -5 2 L 5 2 L 3.4 5 L -3.4 5 Z" />
-      <line x1="0" y1="2" x2="0" y2="-5" />
-      <path d="M 0.3 -5 L 4 -1.2 L 0.3 -1.2 Z" fill={color} stroke="none" />
-    </g>
-  )
-}
-
-const rngTree = mulberry32(42)
-const PARK_TREES = scatterInEllipse(64, 64, 44, 26, 16, 11).map(([x, y]) => ({
-  x, y, s: 0.8 + rngTree() * 0.6,
-}))
-
-const rngBldg = mulberry32(88)
-const DOWNTOWN_BUILDINGS = scatterInEllipse(186, 92, 62, 30, 13, 23).map(([x, y]) => ({
-  x, y, s: 0.7 + rngBldg() * 0.7, h: 6 + rngBldg() * 8,
-}))
-
-const rngHouse = mulberry32(5)
-const SOUTH_HOUSES = scatterInEllipse(160, 205, 165, 20, 18, 31).map(([x, y]) => ({
-  x, y, s: 0.7 + rngHouse() * 0.5,
-}))
-
-const WATER_WAVES = [
-  'M 0 46 Q 20 42 40 46 T 80 46 T 120 46',
-  'M 0 104 Q 24 100 48 104 T 96 104',
-  'M 220 34 Q 240 30 260 34 T 300 34',
-  'M 10 150 Q 30 146 50 150 T 90 150',
-]
-
-const BOATS = [
-  { x: 30, y: 108 }, { x: 285, y: 72 }, { x: 95, y: 158 },
-]
 
 export default function VancouverMap() {
   return (
-    <svg
-      className="vancouver-map"
-      viewBox="0 0 320 192"
-      xmlns="http://www.w3.org/2000/svg"
-      role="img"
-      aria-label="Stylized map of Vancouver, BC"
-    >
-      {/* water */}
-      <rect x="0" y="0" width="320" height="192" fill="var(--v-water)" />
-      {WATER_WAVES.map((d, i) => (
-        <path key={i} d={d} fill="none" stroke="var(--v-water-line)" strokeWidth="1.4" strokeLinecap="round" opacity="0.5" />
-      ))}
-      {BOATS.map((b, i) => (
-        <BoatIcon key={i} x={b.x} y={b.y} s={1.1} color="var(--v-water-line)" />
-      ))}
+    <div className="vancouver-map" role="img" aria-label="Stylized tile-art map of Vancouver, BC">
+      <div className="map-grid" style={{ gridTemplateColumns: `repeat(${COLS}, 1fr)`, gridTemplateRows: `repeat(${ROWS}, 1fr)` }}>
+        {GRID_CELLS.map((c, i) => (
+          <Tile key={i} className="map-tile" col={c.tile[0]} row={c.tile[1]} />
+        ))}
+      </div>
 
-      {/* North Shore mountains */}
-      <Blob cx={160} cy={-6} rx={185} ry={24} n={14} seed={4} irregularity={0.16} fill="var(--v-mountain)" />
-      {[30, 75, 130, 190, 245, 290].map((x, i) => (
-        <PeakIcon key={i} x={x} y={8} s={0.9 + (i % 3) * 0.15} color="var(--v-mountain-line)" />
-      ))}
+      <div className="map-overlay">
+        {paths.map((p, i) => (
+          <Sprite key={`p${i}`} x={p.x} y={p.y} s={16} col={PATH_TILE[0]} row={PATH_TILE[1]} />
+        ))}
+        {mountainRocks.map((r, i) => (
+          <Sprite key={`mr${i}`} x={r.x} y={r.y} s={r.s} col={r.sprite[0]} row={r.sprite[1]} />
+        ))}
+        {mountainTrees.map((r, i) => (
+          <Sprite key={`mt${i}`} x={r.x} y={r.y} s={r.s} col={r.sprite[0]} row={r.sprite[1]} />
+        ))}
+        {flowerPatches.map((f, i) => (
+          <Sprite key={`f${i}`} x={f.x} y={f.y} s={16} col={f.sprite[0]} row={f.sprite[1]} />
+        ))}
+        {houses.map((h, i) => (
+          <div key={`h${i}`} style={{ position: 'absolute', left: pctX(h.x), top: pctY(h.y), width: pctX(h.s), transform: 'translate(-50%,-100%)', display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
+            <Tile col={COTTAGE.roofL[0]} row={COTTAGE.roofL[1]} style={{ width: '100%', aspectRatio: '1' }} />
+            <Tile col={COTTAGE.roofR[0]} row={COTTAGE.roofR[1]} style={{ width: '100%', aspectRatio: '1' }} />
+            <Tile col={COTTAGE.wallL[0]} row={COTTAGE.wallL[1]} style={{ width: '100%', aspectRatio: '1' }} />
+            <Tile col={COTTAGE.wallR[0]} row={COTTAGE.wallR[1]} style={{ width: '100%', aspectRatio: '1' }} />
+          </div>
+        ))}
+        {tents.map((t, i) => (
+          <Sprite key={`tn${i}`} x={t.x} y={t.y} s={17} col={t.sprite[0]} row={t.sprite[1]} />
+        ))}
+        {parkTrees.map((t, i) => (
+          <Sprite key={`t${i}`} x={t.x} y={t.y} s={t.s} col={t.sprite[0]} row={t.sprite[1]} />
+        ))}
 
-      {/* bridge */}
-      <line x1="70" y1="12" x2="70" y2="42" stroke="var(--v-bridge)" strokeWidth="3" strokeLinecap="round" />
-      <circle cx="70" cy="12" r="2.4" fill="var(--v-bridge)" />
-      <circle cx="70" cy="42" r="2.4" fill="var(--v-bridge)" />
-
-      {/* Stanley Park */}
-      <Blob cx={64} cy={64} rx={50} ry={34} n={12} seed={17} irregularity={0.2} fill="var(--v-park)" />
-      {PARK_TREES.map((t, i) => (
-        <TreeIcon key={i} x={t.x} y={t.y} s={t.s} color="var(--v-park-line)" />
-      ))}
-
-      {/* Downtown */}
-      <Blob cx={186} cy={92} rx={76} ry={42} n={13} seed={29} irregularity={0.17} fill="var(--v-downtown)" />
-      {DOWNTOWN_BUILDINGS.map((b, i) => (
-        <BuildingIcon key={i} x={b.x} y={b.y} s={b.s} h={b.h} color="var(--v-downtown-line)" />
-      ))}
-      <TowerIcon x={192} y={86} color="var(--v-downtown-line)" accent="var(--v-accent)" />
-
-      {/* Canada Place sails */}
-      <g transform="translate(150,58)" {...iconProps('var(--v-downtown-line)', 1.4)}>
-        <path d="M -14 8 L -8 -6 L -2 8 Z" />
-        <path d="M -2 8 L 4 -10 L 10 8 Z" />
-        <path d="M 10 8 L 15 -4 L 20 8 Z" />
-        <line x1="-16" y1="8" x2="22" y2="8" />
-      </g>
-
-      {/* Granville Island */}
-      <Blob cx={168} cy={142} rx={30} ry={16} n={10} seed={51} irregularity={0.22} fill="var(--v-island)" />
-      <MarketIcon x={168} y={144} s={1.3} color="var(--v-island-line)" />
-
-      {/* Science World */}
-      <Blob cx={252} cy={144} rx={27} ry={15} n={10} seed={63} irregularity={0.22} fill="var(--v-science)" />
-      <DomeIcon x={252} y={148} s={1.3} color="var(--v-science-line)" />
-
-      {/* South Vancouver */}
-      <Blob cx={160} cy={210} rx={175} ry={30} n={16} seed={8} irregularity={0.1} fill="var(--v-south)" />
-      {SOUTH_HOUSES.map((h, i) => (
-        <HouseIcon key={i} x={h.x} y={h.y} s={h.s} color="var(--v-south-line)" />
-      ))}
-
-      {/* atmosphere labels */}
-      <text x="10" y="12" className="map-label-text">NORTH SHORE</text>
-      <text x="10" y="182" className="map-label-text">ENGLISH BAY</text>
-      <text x="230" y="182" className="map-label-text">SOUTH VANCOUVER</text>
-    </svg>
+        {/* Science World dome (hand-drawn — no direct tile equivalent) */}
+        <svg
+          style={{ position: 'absolute', left: pctX(REGIONS.scienceworld.cx * TS), top: pctY(REGIONS.scienceworld.cy * TS - 6), width: pctX(48), height: pctY(30), transform: 'translate(-50%,-70%)' }}
+          viewBox="0 0 48 30"
+        >
+          <path d="M 6 26 A 18 18 0 0 1 42 26" fill="#e8e0c8" stroke="#4a2f10" strokeWidth="1.6" />
+          <line x1="4" y1="26" x2="44" y2="26" stroke="#4a2f10" strokeWidth="1.6" strokeLinecap="round" />
+          <line x1="24" y1="9" x2="24" y2="26" stroke="#4a2f10" strokeWidth="1.2" />
+          <line x1="14" y1="12" x2="14" y2="26" stroke="#4a2f10" strokeWidth="1.2" />
+          <line x1="34" y1="12" x2="34" y2="26" stroke="#4a2f10" strokeWidth="1.2" />
+        </svg>
+      </div>
+    </div>
   )
 }
