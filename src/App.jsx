@@ -84,7 +84,7 @@ export default function App() {
               <div className="map-pins">{landmarks.map(l => <Landmark key={l.id} landmark={l} onOpen={openLandmark} />)}</div>
             </div>
             <div className="hero-copy">
-              <p className="eyebrow">A LITTLE MAP OF HOME</p>
+              <p className="eyebrow">LET ME SHOW YOU AROUND</p>
               <h1>Hi, I'm<br /><span>Yufei.</span></h1>
               <p className="hero-description">Computer science &amp; math at NYU.<br />Explore my hometown with me!</p>
               <button className="hero-cta" onClick={() => openLandmark('sorora')}>Explore my work <span aria-hidden="true">↗</span></button>

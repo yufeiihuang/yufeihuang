@@ -26,7 +26,7 @@ export default function BootScreen({ onFinish }) {
     <div className="boot-card">
       <p className="eyebrow">YUFEI–OS / EST. VANCOUVER</p>
       <div className="boot-emblem" aria-hidden="true">✦</div>
-      <h1>A little map<br />of home.</h1>
+      <h1>Let me show<br />you around.</h1>
       <div className="boot-log" aria-live="polite">{LINES.slice(0, shown).map(line => <div key={line}><span>✓</span> {line}</div>)}</div>
       <div className="boot-progress-track" role="progressbar" aria-label="Loading Vancouver" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(shown / LINES.length * 100)}><div className="boot-progress-fill" style={{ width: `${shown / LINES.length * 100}%` }} /></div>
       <div className="boot-bottom"><span>{done ? 'YOUR NEXT STOP: VANCOUVER' : 'LOADING THE GOOD STUFF…'}</span><span>{Math.round(shown / LINES.length * 100)}%</span></div>
