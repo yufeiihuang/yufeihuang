@@ -415,3 +415,15 @@
 @keyframes map-shower { 0% { transform: translate(0,-15px); opacity: 0; } 20% { opacity: .45; } 80% { opacity: .3; } 100% { transform: translate(-12px,60px); opacity: 0; } }
 .weather-note { position: absolute; bottom: 12px; right: 12px; font-size: 10px; background: #112c3deb; color: #d4e4e3; padding: 8px; }
 @media (prefers-reduced-motion: reduce) { .map-rain-drop { display: none; } .map-atmosphere { display: block; } .mountain-snow { display: none; } }
+
+.easter-eggs-toggle { display: flex; align-items: center; gap: 9px; min-height: 44px; border: 1px solid #607b70; color: var(--text); background: transparent; padding: 7px 12px; font-size: 11px; }
+.easter-eggs-toggle:hover { background: #244039; border-color: var(--amber); }
+.easter-eggs-toggle svg { transition: transform .2s; }
+.easter-eggs-toggle:hover svg { transform: rotate(-10deg); }
+.easter-eggs-guide > p { font-size: 13px; }
+.easter-eggs-guide ol { list-style: none; padding: 0; margin: 22px 0 0; }
+.easter-eggs-guide li { display: flex; gap: 14px; padding: 16px 0; border-top: 1px dashed #526b62; }
+.egg-number { color: var(--amber); font-size: 10px; padding-top: 3px; }
+.easter-eggs-guide h3 { margin: 0 0 6px; font-size: 14px; color: var(--amber); }
+.easter-eggs-guide li p { margin: 0; font-size: 12px; line-height: 1.8; color: #c5d3cc; }
+.site-footer { flex-wrap: wrap; }

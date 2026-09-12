@@ -17,6 +17,7 @@ import PassportWindow from './components/PassportWindow.jsx'
 import NightLights from './components/NightLights.jsx'
 import OrcaCameo from './components/OrcaCameo.jsx'
 import MapRain from './components/MapRain.jsx'
+import EasterEggsWindow, { EasterEggIcon } from './components/EasterEggsWindow.jsx'
 import './App.css'
 
 const CONTENT = { about: AboutWindow, resume: ResumeWindow, projects: ProjectsWindow, sorora: SororaWindow, contact: ContactWindow }
@@ -104,12 +105,16 @@ export default function App() {
         </section>
       </main>
       <footer className="site-footer">
+        <button className="easter-eggs-toggle" onClick={() => openLandmark('easter-eggs')} aria-label="Open Easter egg guide" title="Discover all the Easter eggs">
+          <EasterEggIcon /><span>Easter eggs</span>
+        </button>
         <button className={`passport-toggle${passportComplete ? ' complete' : ''}`} onClick={() => openLandmark('passport')}>
           <span aria-hidden="true">{passportComplete ? '✦' : '▤'}</span> Hometown passport <span>{visited.length} / 5</span>
         </button>
         <div><a href={profile.github} target="_blank" rel="noreferrer">GitHub ↗</a><a href={`mailto:${profile.email}`}>Say hello ↗</a></div>
       </footer>
       {windows.map(w => {
+        if (w.id === 'easter-eggs') return <RetroWindow key={w.id} {...w} title="Easter egg guide" icon="✦" focused={focusedId === w.id} onClose={closeWindow} onFocus={focusWindow}><EasterEggsWindow /></RetroWindow>
         if (w.id === 'passport') return <RetroWindow key={w.id} {...w} title="Hometown passport" icon="▤" focused={focusedId === w.id} onClose={closeWindow} onFocus={focusWindow}>
           <PassportWindow visited={visited} onExplore={openLandmark} onReset={() => setVisited([])} />
         </RetroWindow>
